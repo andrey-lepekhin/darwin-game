@@ -6,7 +6,10 @@ from termcolor import RESET, colored
 
 from darwin_game.models.player import Player
 
-terminal_width, _ = os.get_terminal_size(0)
+try:
+    terminal_width, _ = os.get_terminal_size(0)
+except OSError:
+    terminal_width = 80
 graph_width = terminal_width - 10
 
 # List of terminal-safe colors

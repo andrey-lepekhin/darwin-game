@@ -1,24 +1,15 @@
 # type: ignore
-import cProfile
-import pstats
+"""Deprecated: use `python -m darwin_game.benchmark` instead."""
 
-from darwin_game.core.import_players import find_import_player_classes
-from darwin_game.core.tournament import DarwinGame
+import warnings
 
+warnings.warn(
+    "darwin_game.profiling is deprecated; use `poetry run python -m darwin_game.benchmark`",
+    DeprecationWarning,
+    stacklevel=1,
+)
 
-def test_tournament():
-    tournament = DarwinGame(
-        player_classes=find_import_player_classes("darwin_game/players/simple"),
-        rounds=100,
-        initial_player_copies=100,
-        game_turns=100,
-        lowest_pool_percent_for_player=None,
-    )
-    tournament.pretty_print_results(tournament.run_tournament())
+from darwin_game.benchmark import main
 
-
-cProfile.run("test_tournament()", "tournament.profile")
-
-
-p = pstats.Stats("tournament.profile")
-p.sort_stats("time").print_stats(10)
+if __name__ == "__main__":
+    main()

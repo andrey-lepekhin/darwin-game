@@ -167,3 +167,6 @@ cython_debug/
 *.ipynb
 
 *.cast
+
+# cProfile output
+*.profile

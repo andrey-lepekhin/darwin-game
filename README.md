@@ -38,5 +38,11 @@ poetry run python -m darwin_game.run_tournament
 ```
 That will run the tournament with the players currently in the `/darwin_game/players` folder.
 
+Use `--quiet` to suppress player names, per-round results, and progress bars while the tournament runs; final standings are still printed:
+
+```
+poetry run python -m darwin_game.run_tournament --quiet
+```
+
 ### How it looks in terminal
 [![asciicast](https://asciinema.org/a/FpP3ZgAkRs6oAiH1YBvcXZhf8.svg)](https://asciinema.org/a/FpP3ZgAkRs6oAiH1YBvcXZhf8)

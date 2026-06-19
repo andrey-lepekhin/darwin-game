@@ -1,12 +1,11 @@
+import argparse
 import logging
 
 from darwin_game.core.import_players import find_import_player_classes
 from darwin_game.core.tournament import DarwinGame, MatchupType
 
-logging.basicConfig(level=logging.INFO)  # set to DEBUG for more info. Will break pretty print
-
-players_folder = "darwin_game/players"
-include_dirs = [
+PLAYERS_FOLDER = "darwin_game/players"
+INCLUDE_DIRS = [
     "simple",
     "chat_gpt_old",
     "andrey",
@@ -15,14 +14,34 @@ include_dirs = [
     "chat_gpt_o3_mini",
 ]
 
-player_classes = find_import_player_classes(players_folder, include_dirs)
+
+def create_tournament(*, quiet: bool = False) -> DarwinGame:
+    player_classes = find_import_player_classes(PLAYERS_FOLDER, INCLUDE_DIRS)
+    return DarwinGame(
+        player_classes=player_classes,
+        rounds=50,
+        initial_player_copies=20,
+        game_turns=100,
+        matchup_type=MatchupType.RANDOM_PAIRING,
+        quiet=quiet,
+    )
 
 
-tournament = DarwinGame(
-    player_classes=player_classes,
-    rounds=50,
-    initial_player_copies=20,
-    game_turns=100,
-    matchup_type=MatchupType.RANDOM_PAIRING,
-)
-tournament.pretty_print_results(tournament.run_tournament())
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Run the Darwin Game tournament.")
+    parser.add_argument(
+        "--quiet",
+        action="store_true",
+        help="Suppress player names, per-round results, and progress bars (final standings still printed).",
+    )
+    args = parser.parse_args()
+
+    logging.basicConfig(level=logging.INFO)  # set to DEBUG for more info. Will break pretty print
+
+    tournament = create_tournament(quiet=args.quiet)
+    results = tournament.run_tournament()
+    tournament.pretty_print_results(results)
+
+
+if __name__ == "__main__":
+    main()

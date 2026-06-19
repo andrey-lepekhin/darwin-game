@@ -32,6 +32,7 @@ class DarwinGame:
     initial_player_copies: int = 100  # Number of copies of each player to start with; should be even > 1
     game_turns: int = 100  # Number of turns per game
     matchup_type: MatchupType = MatchupType.RANDOM_PAIRING
+    quiet: bool = False  # Suppress live tournament output (progress bars, per-round stats)
 
 
     lowest_pool_percent_for_player: float | None = (
@@ -130,7 +131,7 @@ class DarwinGame:
             table.append([player_class.name, exemplars, round(exemplars / self.total_exemplars * 100)])
         print(tabulate(table, headers=["Player", "Copies in the pool", "%"], tablefmt="simple_grid"))
 
-    def run_tournament(self) -> dict[type[Player], int]:
+    def _print_tournament_start(self) -> None:
         print(colored_player_names(self.player_classes))
         print(
             colored_single_round_results(
@@ -138,15 +139,21 @@ class DarwinGame:
             )
         )
 
-        player_stats_bar = tqdm(range(1), desc="Top players", bar_format="{desc}", position=0)
-        pbar = tqdm(range(self.rounds), desc="Playing rounds", position=1)
+    def run_tournament(self) -> dict[type[Player], int]:
+        if not self.quiet:
+            self._print_tournament_start()
+
+        player_stats_bar = tqdm(
+            range(1), desc="Top players", bar_format="{desc}", position=0, disable=self.quiet
+        )
+        pbar = tqdm(range(self.rounds), desc="Playing rounds", position=1, disable=self.quiet)
 
         for _ in pbar:
             round_results = self.play_round()
-            pbar.write(colored_single_round_results(round_results))
+            if not self.quiet:
+                pbar.write(colored_single_round_results(round_results))
+                player_stats_bar.set_description("Top: " + colored_player_names_for_pbar(round_results))
             self.adjust_population(round_results)
-
-            player_stats_bar.set_description("Top: " + colored_player_names_for_pbar(round_results))
 
             # Stop when the population has converged to a winning strategy.
             # I.e., when all exemplars in the pool are of the same class.
