@@ -20,14 +20,14 @@ def test_get_turn_result():
     action1 = 3
     action2 = 2
     result = game._get_turn_result(player1_action=action1, player2_action=action2)
-    assert result.player1_reward == 3
-    assert result.player2_reward == 2
+    assert result.results[0] == 3
+    assert result.results[1] == 2
 
     action1 = 4
     action2 = 2
     result = game._get_turn_result(player1_action=action1, player2_action=action2)
-    assert result.player1_reward == 0
-    assert result.player2_reward == 0
+    assert result.results[0] == 0
+    assert result.results[1] == 0
 
 
 def test_play_turn():
@@ -61,3 +61,15 @@ def test_play_game():
     results = game.play_game()
     assert results[player1] == 0
     assert results[player2] == 0
+
+
+def test_play_game_tracks_scores_incrementally():
+    player1 = MockPlayer()
+    player2 = MockPlayer()
+    player1.make_turn = Mock(return_value=1)
+    player2.make_turn = Mock(return_value=2)
+    game = Game(player1, player2, max_turns=2, check_timeouts=False)
+
+    results = game.play_game()
+    assert results[player1] == game.player1_score == 2
+    assert results[player2] == game.player2_score == 4

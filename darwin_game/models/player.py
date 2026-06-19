@@ -12,7 +12,7 @@ Action = AllowedNumbers  # An action a player can take
 Result = AllowedNumbers  # The result of an action for a player
 
 
-@dataclass
+@dataclass(slots=True, frozen=True)
 class TurnResult:
     # Result of a turn for consumption by a specific player.
     # Used in Player.make_turn() to make decisions.

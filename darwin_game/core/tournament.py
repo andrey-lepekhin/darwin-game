@@ -33,6 +33,7 @@ class DarwinGame:
     game_turns: int = 100  # Number of turns per game
     matchup_type: MatchupType = MatchupType.RANDOM_PAIRING
     quiet: bool = False  # Suppress live tournament output (progress bars, per-round stats)
+    check_timeouts: bool | None = None  # Per-turn timing; defaults to not quiet
 
 
     lowest_pool_percent_for_player: float | None = (
@@ -40,6 +41,9 @@ class DarwinGame:
     )
 
     def __post_init__(self) -> None:
+        if self.check_timeouts is None:
+            self.check_timeouts = not self.quiet
+
         self.pool: list[Player] = self.initialize_pool()
         self.pool_exemplars_by_class: dict[type[Player], int] = {
             player_class: 0 for player_class in self.player_classes
@@ -67,7 +71,12 @@ class DarwinGame:
     def _play_single_game_and_update_results(
         self, player1: Player, player2: Player, results: dict[type[Player], int]
     ) -> None:
-        game = Game(player1, player2, max_turns=self.game_turns)
+        game = Game(
+            player1,
+            player2,
+            max_turns=self.game_turns,
+            check_timeouts=self.check_timeouts,
+        )
         game_result = game.play_game()
         logger.debug([f"{player.name}: {result}" for player, result in game_result.items()])
         for player, points in game_result.items():
