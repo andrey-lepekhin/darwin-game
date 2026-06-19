@@ -1,10 +1,12 @@
+from random import Random
+
 from darwin_game.models.player import Action, Player, PlayerNumber, TurnResult
 
 
 class TitForTatPlayer(Player):
     name = "TitForTat"
 
-    def make_turn(self, turn_history: list[TurnResult], your_number: PlayerNumber) -> Action:
+    def make_turn(self, turn_history: list[TurnResult], your_number: PlayerNumber, rng: Random) -> Action:
         # Start cooperatively
         if not turn_history:
             return 2

@@ -1,3 +1,5 @@
+from random import Random
+
 from darwin_game.models.player import Action, Player, PlayerNumber, TurnResult
 
 
@@ -23,7 +25,7 @@ class DefensiveOptimizer(Player):
             # If the opponent is balanced, maintain a conservative strategy
             return 2
 
-    def make_turn(self, turn_history: list[TurnResult], your_number: PlayerNumber) -> Action:
+    def make_turn(self, turn_history: list[TurnResult], your_number: PlayerNumber, rng: Random) -> Action:
         safe_action = self.calculate_safe_action(turn_history, your_number)
 
         # Enhance strategy for late game

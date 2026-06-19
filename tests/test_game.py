@@ -1,12 +1,12 @@
 from unittest.mock import Mock
+from random import Random
 
 from darwin_game.core.game import Game
-from darwin_game.models.player import Player
+from darwin_game.models.player import Player, PlayerNumber
 
 
 class MockPlayer(Player):
-    def make_turn(self, turn_results):
-        # Implement a simple logic or return a fixed action
+    def make_turn(self, turn_results, your_number: PlayerNumber, rng: Random):
         return 0
 
     name = "MockPlayer"
@@ -37,7 +37,7 @@ def test_play_turn():
     player2.make_turn = Mock(return_value=2)
     game = Game(player1, player2, max_turns=1)
 
-    game._play_turn()
+    game._play_turn(Random(0))
     assert len(game.turn_history) == 1
     assert game.turn_number == 1
 
@@ -61,6 +61,17 @@ def test_play_game():
     results = game.play_game()
     assert results[player1] == 0
     assert results[player2] == 0
+
+
+def test_play_game_with_seed_is_deterministic():
+    player1 = MockPlayer()
+    player2 = MockPlayer()
+    player1.make_turn = Mock(return_value=1)
+    player2.make_turn = Mock(return_value=2)
+
+    game1 = Game(player1, player2, max_turns=2, seed=42, check_timeouts=False)
+    game2 = Game(player1, player2, max_turns=2, seed=42, check_timeouts=False)
+    assert game1.play_game() == game2.play_game()
 
 
 def test_play_game_tracks_scores_incrementally():

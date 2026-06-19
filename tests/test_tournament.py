@@ -4,6 +4,7 @@ from unittest.mock import patch
 from darwin_game.core.import_players import find_import_player_classes
 from darwin_game.core.tournament import DarwinGame
 from darwin_game.benchmark import check_native_arm64
+from darwin_game.run_tournament import create_tournament
 
 
 def test_run_tournament_quiet(capsys):
@@ -19,6 +20,11 @@ def test_run_tournament_quiet(capsys):
     captured = capsys.readouterr()
     assert captured.out == ""
     assert sum(results.values()) == tournament.total_exemplars
+
+
+def test_create_tournament_passes_seed():
+    tournament = create_tournament(quiet=True, base_seed=999)
+    assert tournament.base_seed == 999
 
 
 def test_check_native_arm64_passes_on_arm64():

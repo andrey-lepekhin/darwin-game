@@ -3,6 +3,7 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import IntEnum
+from random import Random
 from typing import Literal
 
 AllowedNumbers = Literal[0, 1, 2, 3, 4, 5]
@@ -33,7 +34,7 @@ class Player(ABC):
 
     @staticmethod
     @abstractmethod
-    def make_turn(turn_history: list[TurnResult], your_number: PlayerNumber) -> Action:
+    def make_turn(turn_history: list[TurnResult], your_number: PlayerNumber, rng: Random) -> Action:
         """
         Choose an action to play. You're allowed to use ONLY the information in input params.
         Do not store any information between turns.
@@ -47,6 +48,8 @@ class Player(ABC):
             and turn_history[-1].actions[1 - your_number] is your opponent's action.
             Do not use your_number to coordinate with e.g. copies of yourself.
             Columns are random for each player in the same game.
+
+            rng (Random): A per-game random number generator. Use this instead of the global random module.
         """
         # The only code you need to write is in this method
         ...

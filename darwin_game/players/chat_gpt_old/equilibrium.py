@@ -1,3 +1,5 @@
+from random import Random
+
 from darwin_game.models.player import Action, Player, PlayerNumber, TurnResult
 
 
@@ -7,7 +9,7 @@ class Equilibrium(Player):
     def __init__(self):
         self.last_opponent_action = None
 
-    def make_turn(self, turn_history: list[TurnResult], your_number: PlayerNumber) -> Action:
+    def make_turn(self, turn_history: list[TurnResult], your_number: PlayerNumber, rng: Random) -> Action:
         if not turn_history:
             # Start cooperatively in the first turn
             return 2

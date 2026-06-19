@@ -1,4 +1,4 @@
-import random
+from random import Random
 from collections import Counter, defaultdict
 
 from darwin_game.models.player import Action, Player, PlayerNumber, TurnResult
@@ -129,7 +129,7 @@ class Practic2(Player):
     """
 
     @profile
-    def make_turn(self, turn_history: list[TurnResult], your_number: PlayerNumber) -> Action:
+    def make_turn(self, turn_history: list[TurnResult], your_number: PlayerNumber, rng: Random) -> Action:
         def most_common_action(actions: list[Action]) -> Action:
             """Return the most common action from a list of actions. In case of a tie, the first action is returned."""
             counts = Counter(actions)
@@ -140,14 +140,14 @@ class Practic2(Player):
 
         # If it's the first turn, return a random action
         if turn_num == 0:
-            return random.choice([2, 3])
+            return rng.choice([2, 3])
 
         # Detect if we're in a start deadlock (both players played the same action in all turns so far)
         for turn in turn_history:
             if turn.actions[0] != turn.actions[1]:
                 break
         else:
-            return random.choice([2, 3])
+            return rng.choice([2, 3])
 
         # Cooperate if opponent cooperated in the last turn and we profited from it
         if turn_history[-1].actions[your_number] == 3 and turn_history[-1].actions[1 - your_number] == 2:

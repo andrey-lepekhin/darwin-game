@@ -1,3 +1,5 @@
+from random import Random
+
 from darwin_game.models.player import Action, Player, PlayerNumber, TurnResult
 
 
@@ -26,7 +28,7 @@ class AdaptiveEquityBot(Player):
             return 2  # Default starting action
         return turn_history[-1].actions[your_number]
 
-    def make_turn(self, turn_history: list[TurnResult], your_number: PlayerNumber) -> Action:
+    def make_turn(self, turn_history: list[TurnResult], your_number: PlayerNumber, rng: Random) -> Action:
         # Start with a cooperative approach
         if not turn_history:
             return 2

@@ -1,6 +1,7 @@
 from time import perf_counter
 from dataclasses import dataclass, field
 import logging
+from random import Random
 
 from darwin_game.models.player import Action, Player, PlayerNumber, TurnResult
 
@@ -17,6 +18,7 @@ class Game:
     player1: Player
     player2: Player
     max_turns: int
+    seed: int | None = None
     debug_per_turn_results: bool = False
     check_timeouts: bool = True
     turn_timeout_seconds: float = 0.0003
@@ -39,11 +41,12 @@ class Game:
         history: list[TurnResult],
         player_number: PlayerNumber,
         player: Player,
+        rng: Random,
     ) -> Action:
         if self.check_timeouts:
             start_time = perf_counter()
             try:
-                turn_action = make_turn(history, player_number)
+                turn_action = make_turn(history, player_number, rng)
                 if perf_counter() - start_time > self.turn_timeout_seconds:
                     raise TimeoutError(
                         f"{player} took more than {self.turn_timeout_seconds} seconds to make a turn."
@@ -53,7 +56,7 @@ class Game:
                 return 0
         else:
             try:
-                turn_action = make_turn(history, player_number)
+                turn_action = make_turn(history, player_number, rng)
             except Exception as e:
                 logger.debug(f"{player} failed with error: {e}. Counting that as a 0 action.")
                 return 0
@@ -63,13 +66,13 @@ class Game:
             return 0
         return turn_action
 
-    def _play_turn(self) -> None:
+    def _play_turn(self, rng: Random) -> None:
         history = self.turn_history
         player1_action = self._call_make_turn(
-            self.player1.make_turn, history, PlayerNumber.PLAYER1, self.player1
+            self.player1.make_turn, history, PlayerNumber.PLAYER1, self.player1, rng
         )
         player2_action = self._call_make_turn(
-            self.player2.make_turn, history, PlayerNumber.PLAYER2, self.player2
+            self.player2.make_turn, history, PlayerNumber.PLAYER2, self.player2, rng
         )
         if self.debug_per_turn_results:
             logger.debug(
@@ -91,6 +94,7 @@ class Game:
 
     def play_game(self) -> dict[Player, int]:
         self._reset_game()
+        rng = Random(self.seed)
 
         player1 = self.player1
         player2 = self.player2
@@ -109,8 +113,12 @@ class Game:
 
         if check_timeouts:
             while turn_num < max_turns:
-                player1_action = self._call_make_turn(p1_make_turn, history, PlayerNumber.PLAYER1, player1)
-                player2_action = self._call_make_turn(p2_make_turn, history, PlayerNumber.PLAYER2, player2)
+                player1_action = self._call_make_turn(
+                    p1_make_turn, history, PlayerNumber.PLAYER1, player1, rng
+                )
+                player2_action = self._call_make_turn(
+                    p2_make_turn, history, PlayerNumber.PLAYER2, player2, rng
+                )
                 if debug:
                     logger.debug(
                         f"{turn_num}: {player1.name}: {player1_action}, {player2.name}: {player2_action}"
@@ -126,7 +134,7 @@ class Game:
         else:
             while turn_num < max_turns:
                 try:
-                    player1_action = p1_make_turn(history, PlayerNumber.PLAYER1)
+                    player1_action = p1_make_turn(history, PlayerNumber.PLAYER1, rng)
                 except Exception as e:
                     logger.debug(f"{player1} failed with error: {e}. Counting that as a 0 action.")
                     player1_action = 0
@@ -134,7 +142,7 @@ class Game:
                     player1_action = 0
 
                 try:
-                    player2_action = p2_make_turn(history, PlayerNumber.PLAYER2)
+                    player2_action = p2_make_turn(history, PlayerNumber.PLAYER2, rng)
                 except Exception as e:
                     logger.debug(f"{player2} failed with error: {e}. Counting that as a 0 action.")
                     player2_action = 0

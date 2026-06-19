@@ -1,4 +1,4 @@
-import random
+from random import Random
 
 from darwin_game.models.player import Action, Player, PlayerNumber, TurnResult
 
@@ -7,7 +7,7 @@ class Rocket(Player):
     name = "Rocket"
 
     @staticmethod
-    def make_turn(turn_history: list[TurnResult], your_number: PlayerNumber) -> Action:
+    def make_turn(turn_history: list[TurnResult], your_number: PlayerNumber, rng: Random) -> Action:
         my_signal = [2, 3, 2]
         if len(turn_history) < 3:
             return my_signal[len(turn_history)]
@@ -24,5 +24,5 @@ class Rocket(Player):
                     return my_previous_turn
             else:
                 if my_previous_turn == his_previous_turn:
-                    return random.choice([2, 3])
-        return random.choice([2, 3])
+                    return rng.choice([2, 3])
+        return rng.choice([2, 3])

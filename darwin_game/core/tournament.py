@@ -1,4 +1,3 @@
-import random
 from dataclasses import dataclass
 import logging
 from enum import StrEnum
@@ -12,6 +11,7 @@ from darwin_game.core.graph_utils import (
     colored_player_names_for_pbar,
     colored_single_round_results,
 )
+from darwin_game.core.rng import batch_seed, game_seed, local_rng
 from darwin_game.models.player import Player
 
 
@@ -34,6 +34,7 @@ class DarwinGame:
     matchup_type: MatchupType = MatchupType.RANDOM_PAIRING
     quiet: bool = False  # Suppress live tournament output (progress bars, per-round stats)
     check_timeouts: bool | None = None  # Per-turn timing; defaults to not quiet
+    base_seed: int = 0
 
 
     lowest_pool_percent_for_player: float | None = (
@@ -69,12 +70,19 @@ class DarwinGame:
         return pool
 
     def _play_single_game_and_update_results(
-        self, player1: Player, player2: Player, results: dict[type[Player], int]
+        self,
+        player1: Player,
+        player2: Player,
+        results: dict[type[Player], int],
+        *,
+        round_index: int,
+        game_index: int,
     ) -> None:
         game = Game(
             player1,
             player2,
             max_turns=self.game_turns,
+            seed=game_seed(self.base_seed, round_index, game_index),
             check_timeouts=self.check_timeouts,
         )
         game_result = game.play_game()
@@ -82,24 +90,38 @@ class DarwinGame:
         for player, points in game_result.items():
             results[player.__class__] += points
 
-        matchup_key = frozenset([player1.__class__, player2.__class__])
-
-    def play_round(self) -> dict[type[Player], int]:
+    def play_round(self, round_index: int) -> dict[type[Player], int]:
         results = {player_class: 0 for player_class in self.player_classes}
+        round_rng = local_rng(batch_seed(self.base_seed, round_index))
 
         if self.matchup_type == MatchupType.RANDOM_PAIRING:
-            random.shuffle(self.pool)
-            for i in range(0, len(self.pool), 2):
-                self._play_single_game_and_update_results(self.pool[i], self.pool[i + 1], results)
+            round_rng.shuffle(self.pool)
+            for game_index, i in enumerate(range(0, len(self.pool), 2), start=1):
+                self._play_single_game_and_update_results(
+                    self.pool[i],
+                    self.pool[i + 1],
+                    results,
+                    round_index=round_index,
+                    game_index=game_index,
+                )
 
         elif self.matchup_type == MatchupType.ROUND_ROBIN:
+            game_index = 0
             for i, player1 in enumerate(self.pool[:-1]):  # No need to include the last player in the outer loop
                 for player2 in self.pool[i + 1 :]:
-                    self._play_single_game_and_update_results(player1, player2, results)
+                    game_index += 1
+                    self._play_single_game_and_update_results(
+                        player1,
+                        player2,
+                        results,
+                        round_index=round_index,
+                        game_index=game_index,
+                    )
 
         return results
 
-    def adjust_population(self, round_results: dict[type[Player], int]) -> None:
+    def adjust_population(self, round_results: dict[type[Player], int], round_index: int) -> None:
+        round_rng = local_rng(batch_seed(self.base_seed, round_index))
         self.pool_exemplars_by_class = {player_class: 0 for player_class in self.player_classes}
         total_points = sum(round_results.values())
         new_pool = []
@@ -119,7 +141,7 @@ class DarwinGame:
         # If the new pool size < total exemplars due to rounding errors,
         # add exemplars randomly from surviving players.
         while len(new_pool) < self.total_exemplars:
-            player_class = random.choice(
+            player_class = round_rng.choice(
                 [player_class for player_class, exemplars in self.pool_exemplars_by_class.items() if exemplars > 0]
             )
             new_pool.append(player_class())
@@ -157,12 +179,12 @@ class DarwinGame:
         )
         pbar = tqdm(range(self.rounds), desc="Playing rounds", position=1, disable=self.quiet)
 
-        for _ in pbar:
-            round_results = self.play_round()
+        for round_index in pbar:
+            round_results = self.play_round(round_index)
             if not self.quiet:
                 pbar.write(colored_single_round_results(round_results))
                 player_stats_bar.set_description("Top: " + colored_player_names_for_pbar(round_results))
-            self.adjust_population(round_results)
+            self.adjust_population(round_results, round_index)
 
             # Stop when the population has converged to a winning strategy.
             # I.e., when all exemplars in the pool are of the same class.

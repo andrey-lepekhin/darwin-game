@@ -15,7 +15,7 @@ INCLUDE_DIRS = [
 ]
 
 
-def create_tournament(*, quiet: bool = False) -> DarwinGame:
+def create_tournament(*, quiet: bool = False, base_seed: int = 0) -> DarwinGame:
     player_classes = find_import_player_classes(PLAYERS_FOLDER, INCLUDE_DIRS)
     return DarwinGame(
         player_classes=player_classes,
@@ -24,6 +24,7 @@ def create_tournament(*, quiet: bool = False) -> DarwinGame:
         game_turns=100,
         matchup_type=MatchupType.RANDOM_PAIRING,
         quiet=quiet,
+        base_seed=base_seed,
     )
 
 
@@ -34,11 +35,17 @@ def main() -> None:
         action="store_true",
         help="Suppress player names, per-round results, and progress bars (final standings still printed).",
     )
+    parser.add_argument(
+        "--seed",
+        type=int,
+        default=0,
+        help="Base seed for reproducible tournaments (pairings, games, population adjustment).",
+    )
     args = parser.parse_args()
 
     logging.basicConfig(level=logging.INFO)  # set to DEBUG for more info. Will break pretty print
 
-    tournament = create_tournament(quiet=args.quiet)
+    tournament = create_tournament(quiet=args.quiet, base_seed=args.seed)
     results = tournament.run_tournament()
     tournament.pretty_print_results(results)
 

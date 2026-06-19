@@ -1,5 +1,4 @@
-import random  # line:1
-import numpy as np  # line:2
+from random import Random  # line:1
 from collections import Counter  # line:3
 from darwin_game.models.player import Action, Player, PlayerNumber, TurnResult  # line:4
 
@@ -12,6 +11,7 @@ class Clippy(Player):  # line:7
         O0OOOO0OO0O0O0O0O,
         O0OOOOO0O000OOO0O: list[TurnResult],
         O0OO00000O00O00O0: PlayerNumber,
+        rng: Random,
     ) -> Action:  # line:13
         O00O000O0O00O00O0 = [
             O0O00O00O000000OO.actions[O0OO00000O00O00O0]
@@ -27,7 +27,7 @@ class Clippy(Player):  # line:7
         ):  # line:20
             if O0O00000O000O00O0 < 8:  # line:21
                 O0OOOO0OO0O0O0O0O.state = "sub8"  # line:22
-                return random.choice([2, 3])  # line:23
+                return rng.choice([2, 3])  # line:23
             if O0O00000O000O00O0 == 8:  # line:25
                 O0OOOO0OO0O0O0O0O.state = "8"  # line:26
                 if hash(str(O00O000O0O00O00O0)) > hash(
@@ -108,7 +108,7 @@ class Clippy(Player):  # line:7
             ]
         )  # line:82
         O0OOOO0OO0O0O0O0O.state = "halve_sub3"  # line:83
-        if np.random.random() < (O000000OO0O00OOO0 * 0.5):  # line:84
+        if rng.random() < (O000000OO0O00OOO0 * 0.5):  # line:84
             return 2  # line:85
         else:  # line:86
             return 3  # line:87

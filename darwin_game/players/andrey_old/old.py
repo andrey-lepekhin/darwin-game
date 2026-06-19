@@ -1,17 +1,15 @@
+from random import Random
+
 from darwin_game.models.player import Action, Player, PlayerNumber, TurnResult
-
-import logging
-
-import numpy as np
 
 
 class OldAndrey(Player):
     name = "OldAndrey"
 
     @staticmethod
-    def make_turn(turn_history: list[TurnResult], your_number: PlayerNumber) -> Action:
+    def make_turn(turn_history: list[TurnResult], your_number: PlayerNumber, rng: Random) -> Action:
         def antideadlock():
-            rnd = np.random.uniform(0, 1)
+            rnd = rng.random()
             if rnd <= 0.12:
                 return 1
             if rnd <= 0.6:
@@ -51,7 +49,7 @@ class OldAndrey(Player):
             if opponent_points < our_points:
                 return 2
             if turn_num > threshold * 2:
-                return 3  # something's fishy, opponent doesn't cooperate in the expected way
+                return 3
 
         if opponent_points > our_points:
             return 3
@@ -64,46 +62,3 @@ class OldAndrey(Player):
                 return 2
 
         return antideadlock()
-
-
-# def predict_randomness_efficient(opponent_turns):
-#     # Define the subsets of interest
-#     subsets = {
-#         '(1, 2, 3)': set([1, 2, 3]),
-#         '(2, 3)': set([2, 3]),
-#         '(1, 2, 3, 4, 5)': set([1, 2, 3, 4, 5]),
-#         '(3, 4, 5)': set([3, 4, 5])
-#     }
-
-#     # Calculate observed frequencies for each possible turn (0-5)
-#     observed_freq = [opponent_turns.count(i) for i in range(6)]
-
-#     # Prepare a dictionary to hold deviation scores for each subset
-#     deviation_scores = {}
-
-#     for subset_label, subset_numbers in subsets.items():
-#         # Calculate the total number of turns that fall within the subset
-#         total_subset_turns = sum(observed_freq[i] for i in subset_numbers)
-
-#         # The expected frequency for each turn in the subset, if randomly distributed
-#         expected_freq_per_turn = total_subset_turns / len(subset_numbers)
-
-#         # Calculate the deviation score as the sum of absolute differences
-#         # between observed and expected frequencies for turns in the subset
-#         deviation_score = sum(abs(observed_freq[i] - expected_freq_per_turn) for i in subset_numbers)
-
-#         # Normalize the deviation score by the total number of turns
-#         if total_subset_turns > 0:
-#             deviation_scores[subset_label] = deviation_score / total_subset_turns
-#         else:
-#             deviation_scores[subset_label] = float('inf')  # Impossibly high score if no turns fall within the subset
-
-#     # Return the subset with the minimum deviation score
-#     min_deviation_subset = min(deviation_scores, key=deviation_scores.get)
-#     return min_deviation_subset, deviation_scores
-
-# # Example usage with a hypothetical set of turns
-# predict_randomness_efficient(example_turns)
-
-
-"""boop"""

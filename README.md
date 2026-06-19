@@ -28,6 +28,13 @@ The Darwin Game encourages players to evolve their strategies over time, balanci
 ## Player implementation
 - Implement your player as a child of the [Player abstract class](./darwin_game/models/player.py).
 - Place your player class into the `/darwin_game/players` (sub)folder.
+- Implement `make_turn(turn_history, your_number, rng)` and use the per-game `rng` for any randomness. Do not use the global `random` module or `numpy.random`.
+- If you need NumPy inside a turn, seed a local generator from `rng`:
+
+```python
+gen = np.random.default_rng(rng.getrandbits(128))
+```
+
 - Your code should not take more than 0.0003 seconds to run, otherwise your turn will be counted as 0
 
 ## Running the tournament
@@ -43,6 +50,16 @@ Use `--quiet` to suppress player names, per-round results, and progress bars whi
 ```
 poetry run python -m darwin_game.run_tournament --quiet
 ```
+
+Use `--seed` to reproduce a tournament run. Same seed, player set, and tournament settings yield the same outcome:
+
+```
+poetry run python -m darwin_game.run_tournament --seed 12345 --quiet
+```
+
+When constructing a tournament in code, pass `base_seed` to [DarwinGame](./darwin_game/core/tournament.py). Pairings, population adjustment, and in-game player randomness are all derived from that seed.
+
+**Note:** players that use Python's built-in `hash()` (for example Clippy) may still behave differently across separate Python processes unless `PYTHONHASHSEED` is fixed.
 
 ### How it looks in terminal
 [![asciicast](https://asciinema.org/a/FpP3ZgAkRs6oAiH1YBvcXZhf8.svg)](https://asciinema.org/a/FpP3ZgAkRs6oAiH1YBvcXZhf8)
